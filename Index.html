@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦸 Héroes Digitales - Taller Interactivo</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Comic Sans MS', 'Trebuchet MS', sans-serif; }
+body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; overflow-x: hidden; }
+.container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+/* PANTALLA DE INICIO */
+#pantalla-inicio { text-align: center; padding: 40px 20px; animation: fadeIn 1s; }
+.titulo-principal { font-size: 3em; color: #fff; text-shadow: 3px 3px 0 #ff6b6b, 6px 6px 0 rgba(0,0,0,0.2); margin-bottom: 20px; animation: bounce 2s infinite; }
+.subtitulo { font-size: 1.5em; color: #ffe66d; margin-bottom: 30px; }
+.personaje-guia { font-size: 8em; animation: float 3s ease-in-out infinite; }
+.btn-iniciar { background: linear-gradient(45deg, #ff6b6b, #feca57); color: white; border: none; padding: 20px 50px; font-size: 1.5em; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: all 0.3s; font-weight: bold; }
+.btn-iniciar:hover { transform: scale(1.1) rotate(-2deg); box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
+
+/* BARRA DE PROGRESO */
+.barra-progreso { background: rgba(255,255,255,0.2); border-radius: 20px; padding: 10px; margin: 20px 0; display: flex; justify-content: space-between; align-items: center; }
+.puntos { background: #feca57; color: #333; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 1.2em; }
+.nivel-indicador { color: white; font-size: 1.1em; }
+
+/* NIVELES */
+.nivel { display: none; background: white; border-radius: 30px; padding: 30px; margin: 20px 0; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideIn 0.5s; }
+.nivel.activo { display: block; }
+.nivel-titulo { font-size: 2em; color: #667eea; margin-bottom: 15px; text-align: center; }
+.nivel-imagen { width: 100%; max-height: 400px; object-fit: cover; border-radius: 20px; margin: 20px 0; border: 5px solid #ffe66d; }
+.explicacion { background: #f0f4ff; padding: 20px; border-radius: 15px; margin: 20px 0; border-left: 8px solid #667eea; font-size: 1.1em; line-height: 1.6; }
+.explicacion strong { color: #ff6b6b; }
+
+/* JUEGOS */
+.juego-area { background: #fff9e6; padding: 25px; border-radius: 20px; margin: 20px 0; border: 3px dashed #feca57; }
+.pregunta { font-size: 1.3em; color: #333; margin-bottom: 20px; font-weight: bold; }
+.opciones { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+.opcion { background: white; border: 3px solid #667eea; padding: 15px; border-radius: 15px; cursor: pointer; transition: all 0.3s; font-size: 1.1em; text-align: center; }
+.opcion:hover { background: #667eea; color: white; transform: translateY(-3px); }
+.opcion.correcta { background: #51cf66; border-color: #2b8a3e; color: white; animation: pulse 0.5s; }
+.opcion.incorrecta { background: #ff6b6b; border-color: #c92a2a; color: white; animation: shake 0.5s; }
+
+/* ARRASTRAR Y SOLTAR */
+.drag-container { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; min-height: 80px; padding: 15px; background: white; border-radius: 15px; border: 2px solid #ddd; }
+.drag-item { background: #ffe66d; padding: 12px 20px; border-radius: 10px; cursor: grab; font-weight: bold; user-select: none; box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
+.drag-item:active { cursor: grabbing; }
+.drop-zone { background: #f0f4ff; padding: 20px; border-radius: 15px; margin: 10px 0; min-height: 60px; border: 3px dashed #667eea; display: flex; align-items: center; justify-content: center; font-size: 1.1em; color: #666; }
+.drop-zone.correcto { background: #d3f9d8; border-color: #51cf66; }
+.drop-zone.incorrecto { background: #ffe3e3; border-color: #ff6b6b; }
+
+/* PROTOCOLO - ORDENAR PASOS */
+.pasos-container { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+.paso-item { background: white; border: 3px solid #667eea; padding: 15px; border-radius: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: all 0.3s; }
+.paso-item:hover { background: #f0f4ff; }
+.paso-numero { background: #667eea; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2em; }
+.paso-item.orden-correcto { border-color: #51cf66; background: #d3f9d8; }
+
+/* SIMULADOR DE DECISIONES */
+.escenario { background: #fff3cd; padding: 20px; border-radius: 15px; margin: 20px 0; border-left: 8px solid #feca57; }
+.escenario-texto { font-size: 1.2em; font-style: italic; margin-bottom: 15px; }
+.decision-botones { display: flex; flex-direction: column; gap: 10px; }
+.decision-btn { background: white; border: 3px solid #667eea; padding: 15px; border-radius: 15px; cursor: pointer; font-size: 1.1em; text-align: left; transition: all 0.3s; }
+.decision-btn:hover { background: #667eea; color: white; }
+
+/* RETO FINAL - PSEUDOCÓDIGO */
+.pseudocodigo-area { background: #2d3436; color: #00ff88; padding: 20px; border-radius: 15px; font-family: 'Courier New', monospace; font-size: 1.1em; margin: 20px 0; }
+.pseudocodigo-linea { margin: 5px 0; padding: 5px; }
+.pseudocodigo-linea.correcta { background: rgba(0,255,136,0.2); }
+.pseudocodigo-linea.incorrecta { background: rgba(255,107,107,0.2); }
+
+/* BOTONES GENERALES */
+.btn-accion { background: linear-gradient(45deg, #667eea, #764ba2); color: white; border: none; padding: 15px 30px; font-size: 1.2em; border-radius: 25px; cursor: pointer; margin: 10px; transition: all 0.3s; font-weight: bold; }
+.btn-accion:hover { transform: scale(1.05); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+.btn-accion:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* FEEDBACK */
+.feedback { padding: 20px; border-radius: 15px; margin: 20px 0; font-size: 1.2em; text-align: center; display: none; }
+.feedback.exito { background: #d3f9d8; color: #2b8a3e; border: 3px solid #51cf66; display: block; animation: bounce 0.5s; }
+.feedback.error { background: #ffe3e3; color: #c92a2a; border: 3px solid #ff6b6b; display: block; animation: shake 0.5s; }
+
+/* CERTIFICADO */
+.certificado { background: linear-gradient(135deg, #ffe66d, #feca57); padding: 40px; border-radius: 30px; text-align: center; border: 10px double #667eea; margin: 20px 0; }
+.certificado-titulo { font-size: 2.5em; color: #667eea; margin-bottom: 20px; }
+.certificado-texto { font-size: 1.3em; color: #333; margin: 15px 0; }
+.medalla { font-size: 6em; animation: rotate 3s ease-in-out infinite; }
+
+/* ANIMACIONES */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { transform: translateX(-100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes rotate { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .titulo-principal { font-size: 2em; }
+  .opciones { grid-template-columns: 1fr; }
+  .nivel { padding: 20px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- BARRA SUPERIOR -->
+<div class="barra-progreso" id="barra-progreso" style="display:none;">
+  <div class="nivel-indicador">🎮 Nivel: <span id="nivel-actual">1</span>/6</div>
+  <div class="puntos">⭐ Puntos: <span id="puntos-total">0</span></div>
+</div>
+
+<!-- PANTALLA DE INICIO -->
+<div id="pantalla-inicio">
+  <div class="personaje-guia">🦸‍♀️</div>
+  <h1 class="titulo-principal">¡HÉROES DIGITALES!</h1>
+  <p class="subtitulo">Aprende a ser un superhéroe del mundo digital 🌐</p>
+  <div style="background:white; padding:30px; border-radius:20px; margin:30px 0; text-align:left;">
+    <h2 style="color:#667eea; margin-bottom:15px;">📚 ¿Qué aprenderás?</h2>
+    <ul style="font-size:1.2em; line-height:2; color:#333;">
+      <li>👣 <strong>Tu Huella Digital:</strong> Las marcas que dejas en internet</li>
+      <li>🛡️ <strong>El Espectador Activo:</strong> Cómo ayudar cuando alguien sufre bullying</li>
+      <li>🔒 <strong>Protocolo de Contención:</strong> Los 4 pasos mágicos para protegerte</li>
+      <li>🤖 <strong>Los Algoritmos:</strong> Los robots que deciden qué ves</li>
+      <li>🫧 <strong>La Cámara de Eco:</strong> La burbuja que te aísla</li>
+      <li>😰 <strong>Doomscrolling:</strong> El bucle de noticias tristes</li>
+    </ul>
+  </div>
+  <button class="btn-iniciar" onclick="iniciarJuego()">🚀 ¡COMENZAR AVENTURA!</button>
+</div>
+
+<!-- NIVEL 1: LA HUELLA DIGITAL -->
+<div class="nivel" id="nivel-1">
+  <h2 class="nivel-titulo">👣 NIVEL 1: La Huella Digital</h2>
+  <img src="img-0" alt="Huella Digital" class="nivel-imagen" onerror="this.style.display='none'">
+  <div class="explicacion">
+    <strong>¿Qué es la Huella Digital?</strong><br><br>
+    Imagina que caminas por la playa 🏖️. Cada paso que das deja una marca en la arena. En internet pasa algo parecido, ¡pero las marcas NUNCA se borran!<br><br>
+    Cada foto que subes, cada comentario que escribes, cada "me gusta" que das... todo eso forma tu <strong>Huella Digital</strong>. Es como una cicatriz permanente en internet.<br><br>
+    ⚠️ <strong>¡OJO!</strong> Cuando seas grande, las empresas y universidades pueden ver tu huella digital. ¡Por eso debemos ser cuidadosos!
+  </div>
+
+  <div class="juego-area">
+    <h3 style="color:#667eea; margin-bottom:15px;">🎯 JUEGO: ¿Esto deja huella o no?</h3>
+    <p class="pregunta">Arrastra cada acción a la caja correcta:</p>
+    
+    <div class="drag-container" id="acciones-container">
+      <div class="drag-item" draggable="true" data-tipo="huella">Subir una foto enojado</div>
+      <div class="drag-item" draggable="true" data-tipo="huella">Comentar algo malo de alguien</div>
+      <div class="drag-item" draggable="true" data-tipo="no-huella">Leer un libro en casa</div>
+      <div class="drag-item" draggable="true" data-tipo="huella">Compartir un chisme</div>
+      <div class="drag-item" draggable="true" data-tipo="no-huella">Jugar en el parque</div>
+      <div class="drag-item" draggable="true" data-tipo="huella">Poner un like a una burla</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:20px;">
+      <div>
+        <h4 style="color:#ff6b6b;">👣 Deja Huella Digital</h4>
+        <div class="drop-zone" data-acepta="huella" ondrop="soltar(event)" ondragover="permitirSoltar(event)">Arrastra aquí</div>
+      </div>
+      <div>
+        <h4 style="color:#51cf66;">🌳 No Deja Huella Digital</h4>
+        <div class="drop-zone" data-acepta="no-huella" ondrop="soltar(event)" ondragover="permitirSoltar(event)">Arrastra aquí</div>
+      </div>
+    </div>
+
+    <button class="btn-accion" onclick="verificarNivel1()">✅ Verificar Respuestas</button>
+    <div class="feedback" id="feedback-nivel1"></div>
+  </div>
+</div>
+
+<!-- NIVEL 2: EL ESPECTADOR ACTIVO -->
+<div class="nivel" id="nivel-2">
+  <h2 class="nivel-titulo">🛡️ NIVEL 2: El Espectador Activo</h2>
+  <img src="img-1" alt="Espectador Activo" class="nivel-imagen" onerror="this.style.display='none'">
+  <div class="explicacion">
+    <strong>¿Qué es un Espectador Activo?</strong><br><br>
+    Cuando ves que alguien está sufriendo bullying en internet, tienes 3 opciones:<br><br>
+    🔴 <strong>Espectador Pasivo:</strong> No haces nada (¡eso ayuda al bully!)<br>
+    🟡 <strong>Espectador que empeora:</strong> Le das "like" o compartes (¡muy mal!)<br>
+    🟢 <strong>Espectador Activo (HÉROE):</strong> Ayudas a la víctima, no compartes, reportas y apoyas en privado<br><br>
+    <strong>¡Tú puedes ser un HÉROE DIGITAL!</strong> 🦸
+  </div>
+
+  <div class="juego-area">
+    <h3 style="color:#667eea; margin-bottom:15px;">🎭 SIMULADOR: ¿Qué harías tú?</h3>
+    
+    <div class="escenario">
+      <p class="escenario-texto">💬 "Ves que en el grupo del salón están mandando memes burlándose de tu compañero Luis por su forma de hablar..."</p>
+      <div class="decision-botones">
+        <button class="decision-btn" onclick="evaluarDecision(this, 'incorrecta', 'nivel2')">😂 Reírme y mandar otro meme</button>
+        <button class="decision-btn" onclick="evaluarDecision(this, 'incorrecta', 'nivel2')">🤐 No hacer nada, no es mi problema</button>
+        <button class="decision-btn" onclick="evaluarDecision(this, 'correcta', 'nivel2')">💚 Escribirle a Luis en privado: 'Estoy contigo, no estás solo' y reportar los mensajes</button>
+        <button class="decision-btn" onclick="evaluarDecision(this, 'incorrecta', 'nivel2')">📸 Tomar captura y compartirla en otros grupos para 'denunciar'</button>
+      </div>
+    </div>
+
+    <div class="feedback" id="feedback-nivel2"></div>
+  </div>
+</div>
+
+<!-- NIVEL 3: PROTOCOLO DE CONTENCIÓN -->
+<div class="nivel" id="nivel-3">
+  <h2 class="nivel-titulo">🔒 NIVEL 3: El Protocolo de los 4 Pasos</h2>
+  <img src="img-2" alt="Protocolo de Contención" class="nivel-imagen" onerror="this.style.display='none'">
+  <div class="explicacion">
+    <strong>Los 4 Pasos Mágicos del Héroe Digital:</strong><br><br>
+    Cuando algo malo pasa en internet, sigue estos pasos en ORDEN:<br><br>
+    📸 <strong>PASO 1 - PRESERVAR:</strong> Toma captura de pantalla (con fecha, hora y URL)<br>
+    🔒 <strong>PASO 2 - AISLAR:</strong> Bloquea al agresor (no le avises que lo bloqueas)<br>
+    🚩 <strong>PASO 3 - DENUNCIAR:</strong> Reporta en la plataforma y avisa a un adulto de confianza<br>
+    💚 <strong>PASO 4 - CONTENER:</strong> Busca apoyo emocional (familia, amigos, psicólogo)<br><br>
+    ⚠️ <strong>ERROR FATAL:</strong> ¡Nunca compartas el contenido ofensivo "para denunciarlo"! Eso se llama <strong>REVICTIMIZACIÓN</strong> y hace más daño.
+  </div>
+
+  <div class="juego-area">
+    <h3 style="color:#667eea; margin-bottom:15px;">🧩 JUEGO: Ordena los 4 pasos correctamente</h3>
+    <p class="pregunta">Haz clic en los pasos en el orden correcto (del 1 al 4):</p>
+    
+    <div class="pasos-container" id="pasos-container">
+      <div class="paso-item" data-orden="3" onclick="seleccionarPaso(this)">
+        <div class="paso-numero">?</div>
+        <div>🚩 Denunciar en la plataforma y avisar a un adulto</div>
+      </div>
+      <div class="paso-item" data-orden="1" onclick="seleccionarPaso(this)">
+        <div class="paso-numero">?</div>
+        <div>📸 Preservar: tomar captura con fecha y hora</div>
+      </div>
+      <div class="paso-item" data-orden="4" onclick="seleccionarPaso(this)">
+        <div class="paso-numero">?</div>
+        <div>💚 Contener: buscar apoyo emocional</div>
+      </div>
+      <div class="paso-item" data-orden="2" onclick="seleccionarPaso(this)">
+        <div class="paso-numero">?</div>
+        <div>🔒 Aislar: bloquear al agresor</div>
+      </div>
+    </div>
+
+    <button class="btn-accion" onclick="verificarPasos()">✅ Verificar Orden</button>
+    <button class="btn-accion" onclick="reiniciarPasos()" style="background:linear-gradient(45deg,#ff6b6b,#feca57);">🔄 Reiniciar</button>
+    <div class="feedback" id="feedback-nivel3"></div>
+  </div>
+</div>
+
+<!-- NIVEL 4: ALGORITMOS Y CÁMARA DE ECO -->
+<div class="nivel" id="nivel-4">
+  <h2 class="nivel-titulo">🤖 NIVEL 4: Los Algoritmos y la Cámara de Eco</h2>
+  <img src="img-3" alt="Algoritmos" class="nivel-imagen" onerror="this.style.display='none'">
+  <div class="explicacion">
+    <strong>¿Qué es un Algoritmo?</strong><br><br>
+    Un algoritmo es como un <strong>robot invisible</strong> 🤖 que decide qué cosas te muestra en TikTok, YouTube, Instagram...<br><br>
+    Este robot NO te muestra lo que es verdad o importante. ¡Te muestra lo que te hace quedar más tiempo viendo! Por eso a veces te muestra cosas que te enojan o te asustan... porque eso te hace seguir mirando.<br><br>
+    <strong>La Cámara de Eco 🫧</strong> es como una burbuja: el algoritmo solo te muestra cosas con las que ya estás de acuerdo. ¡Así nunca conoces otras opiniones!
+  </div>
+
+  <img src="img-4" alt="Cámara de Eco" class="nivel-imagen" onerror="this.style.display='none'" style="margin-top:20px;">
+
+  <div class="juego-area">
+    <h3 style="color:#667eea; margin-bottom:15px;">🎯 JUEGO: Verdadero o Falso sobre Algoritmos</h3>
+    
+    <div id="preguntas-algoritmo">
+      <div class="pregunta-alg" data-num="1">
+        <p class="pregunta">1. Los algoritmos te muestran solo lo que te gusta para que pases más tiempo en la app.</p>
+        <div class="opciones">
+          <button class="opcion" onclick="evaluarPreguntaAlg(this, true, 1)">✅ Verdadero</button>
+          <button class="opcion" onclick="evaluarPreguntaAlg(this, false, 1)">❌ Falso</button>
+        </div>
+      </div>
+
+      <div class="pregunta-alg" data-num="2" style="display:none;">
+        <p class="pregunta">2. La "Cámara de Eco" es buena porque te ayuda a conocer todas las opiniones.</p>
+        <div class="opciones">
+          <button class="opcion" onclick="evaluarPreguntaAlg(this, false, 2)">✅ Verdadero</button>
+          <button class="opcion" onclick="evaluarPreguntaAlg(this, true, 2)">❌ Falso</button>
+        </div>
+      </div>
+
+      <div class="pregunta-alg" data-num="3" style="display:none;">
+        <p class="pregunta">3. El "Doomscrolling" es cuando no puedes dejar de ver noticias tristes una tras otra.</p>
+        <div class="opciones">
+          <button class="opcion" onclick="evaluarPreguntaAlg(this, true, 3)">✅ Verdadero</button>
+          <button class="opcion" onclick="evaluarPreguntaAlg(this, false, 3)">❌ Falso</button>
+        </div>
+      </div>
+
+      <div class="pregunta-alg" data-num="4" style="display:none;">
+        <p class="pregunta">4. Los algoritmos siempre son justos y no tienen prejuicios.</p>
+        <div class="opciones">
+          <button class="opcion" onclick="evaluarPreguntaAlg(this, false, 4)">✅ Verdadero</button>
+          <button class="opcion" onclick="evaluarPreguntaAlg(this, true, 4)">❌ Falso</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="feedback" id="feedback-nivel4"></div>
+  </div>
+</div>
+
+<!-- NIVEL 5: DOOMSCROLLING Y SALUD MENTAL -->
+<div class="nivel" id="nivel-5">
+  <h2 class="nivel-titulo">😰 NIVEL 5: Doomscrolling y Tu Salud Mental</h2>
+  <img src="img-5" alt="Doomscrolling" class="nivel-imagen" onerror="this.style.display='none'">
+  <div class="explicacion">
+    <strong>¿Qué es el Doomscrolling?</strong><br><br>
+    Es cuando <strong>no puedes dejar de deslizar</strong> viendo noticias tristes, feas o que te dan miedo. El algoritmo te atrapa en un bucle infinito.<br><br>
+    <strong>¿Por qué es malo?</strong><br>
+    😟 Te hace sentir triste y ansioso<br>
+    😴 Te quita el sueño<br>
+    😠 Te hace enojar con todo el mundo<br>
+    📉 Te hace sentir mal contigo mismo (sobre todo con filtros de belleza)<br><br>
+    <strong>¿Cómo defenderte?</strong><br>
+    ⏰ Pon un límite de tiempo (30 minutos al día)<br>
+    🌳 Sal a jugar afuera<br>
+    💬 Habla con tus amigos en persona<br>
+    📵 Deja el celular 1 hora antes de dormir
+  </div>
+
+  <div class="juego-area">
+    <h3 style="color:#667eea; margin-bottom:15px;">⚖️ JUEGO: ¿Saludable o No Saludable?</h3>
+    <p class="pregunta">Clasifica cada hábito digital:</p>
+    
+    <div class="drag-container" id="habitos-container">
+      <div class="drag-item" draggable="true" data-tipo="no-saludable">Ver TikTok 4 horas seguidas</div>
+      <div class="drag-item" draggable="true" data-tipo="saludable">Jugar fútbol con amigos</div>
+      <div class="drag-item" draggable="true" data-tipo="no-saludable">Compararte con influencers con filtros</div>
+      <div class="drag-item" draggable="true" data-tipo="saludable">Leer un libro antes de dormir</div>
+      <div class="drag-item" draggable="true" data-tipo="no-saludable">Ver noticias tristes sin parar</div>
+      <div class="drag-item" draggable="true" data-tipo="saludable">Usar el celular 30 min al día</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:20px;">
+      <div>
+        <h4 style="color:#51cf66;">💚 Saludable</h4>
+        <div class="drop-zone" data-acepta="saludable" ondrop="soltar(event)" ondragover="permitirSoltar(event)">Arrastra aquí</div>
+      </div>
+      <div>
+        <h4 style="color:#ff6b6b;">⚠️ No Saludable</h4>
+        <div class="drop-zone" data-acepta="no-saludable" ondrop="soltar(event)" ondragover="permitirSoltar(event)">Arrastra aquí</div>
+      </div>
+    </div>
+
+    <button class="btn-accion" onclick="verificarNivel5()">✅ Verificar</button>
+    <div class="feedback" id="feedback-nivel5"></div>
+  </div>
+</div>
+
+<!-- NIVEL 6: RETO FINAL - PSEUDOCÓDIGO -->
+<div class="nivel" id="nivel-6">
+  <h2 class="nivel-titulo">🏆 NIVEL 6: El Reto Final del Héroe Digital</h2>
+  <div class="explicacion">
+    <strong>¡Es hora de demostrar todo lo que aprendiste!</strong><br><br>
+    Vas a escribir un <strong>Pseudocódigo de Contención</strong> (como un programa de computadora) para resolver un caso de ciberacoso. Usa las palabras mágicas: <strong>SI... ENTONCES...</strong>
+  </div>
+
+  <div class="juego-area">
+    <h3 style="color:#667eea; margin-bottom:15px;">📝 CASO: Tu amiga Ana recibe mensajes feos en un grupo</h3>
+    <p class="pregunta">Selecciona las acciones correctas en orden:</p>
+
+    <div id="reto-final-opciones">
+      <div class="decision-btn" onclick="toggleAccion(this)" data-correcta="true" data-orden="1">📸 Tomar captura del grupo con fecha y hora</div>
+      <div class="decision-btn" onclick="toggleAccion(this)" data-correcta="false">😡 Responderle al agresor con enojo</div>
+      <div class="decision-btn" onclick="toggleAccion(this)" data-correcta="true" data-orden="2">🔒 Bloquear al agresor sin avisarle</div>
+      <div class="decision-btn" onclick="toggleAccion(this)" data-correcta="false">📤 Compartir los mensajes en otros grupos "para que todos vean"</div>
+      <div class="decision-btn" onclick="toggleAccion(this)" data-correcta="true" data-orden="3">🚩 Reportar el grupo en WhatsApp y avisar a un adulto</div>
+      <div class="decision-btn" onclick="toggleAccion(this)" data-correcta="true" data-orden="4">💚 Escribirle a Ana en privado: "Estoy contigo"</div>
+      <div class="decision-btn" onclick="toggleAccion(this)" data-correcta="false">🤣 Reírme de los mensajes</div>
+      <div class="decision-btn" onclick="toggleAccion(this)" data-correcta="false">🗑️ Borrar los mensajes antes de tomar captura</div>
+    </div>
+
+    <h4 style="margin-top:20px; color:#667eea;">Tu Pseudocódigo (acciones seleccionadas):</h4>
+    <div class="pseudocodigo-area" id="pseudocodigo-resultado">
+      <div class="pseudocodigo-linea">SI detecto acoso hacia Ana ENTONCES:</div>
+      <div id="acciones-seleccionadas"></div>
+    </div>
+
+    <button class="btn-accion" onclick="verificarRetoFinal()">🏆 Enviar Solución</button>
+    <div class="feedback" id="feedback-nivel6"></div>
+  </div>
+</div>
+
+<!-- CERTIFICADO FINAL -->
+<div class="nivel" id="certificado-final">
+  <div class="certificado">
+    <div class="medalla">🏅</div>
+    <h2 class="certificado-titulo">¡FELICIDADES, HÉROE DIGITAL!</h2>
+    <p class="certificado-texto">Has completado el taller de Ciudadanía Digital</p>
+    <p class="certificado-texto" style="font-size:1.5em; color:#667eea;">Puntuación Final: <span id="puntos-finales">0</span> ⭐</p>
+    <div style="background:white; padding:20px; border-radius:15px; margin:20px 0; text-align:left;">
+      <h3 style="color:#667eea;">📜 Lo que aprendiste:</h3>
+      <ul style="font-size:1.1em; line-height:2; margin-top:10px;">
+        <li>✅ Tu huella digital es permanente: piensa antes de publicar</li>
+        <li>✅ Sé un espectador activo: ayuda, no ignores</li>
+        <li>✅ Los 4 pasos: Preservar, Aislar, Denunciar, Contener</li>
+        <li>✅ Nunca compartas contenido ofensivo (revictimización)</li>
+        <li>✅ Los algoritmos no son neutrales: te muestran lo que te engancha</li>
+        <li>✅ Sal de la cámara de eco: busca opiniones diferentes</li>
+        <li>✅ Cuida tu salud mental: limita el doomscrolling</li>
+      </ul>
+    </div>
+    <button class="btn-accion" onclick="location.reload()" style="background:linear-gradient(45deg,#51cf66,#20c997);">🔄 Jugar de Nuevo</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// VARIABLES GLOBALES
+let puntos = 0;
+let nivelActual = 1;
+let pasosSeleccionados = [];
+let preguntaAlgActual = 1;
+let respuestasAlgCorrectas = 0;
+let accionesSeleccionadas = [];
+
+// INICIAR JUEGO
+function iniciarJuego() {
+  document.getElementById('pantalla-inicio').style.display = 'none';
+  document.getElementById('barra-progreso').style.display = 'flex';
+  document.getElementById('nivel-1').classList.add('activo');
+  actualizarPuntos(0);
+}
+
+// ACTUALIZAR PUNTOS
+function actualizarPuntos(nuevosPuntos) {
+  puntos += nuevosPuntos;
+  document.getElementById('puntos-total').textContent = puntos;
+}
+
+// NAVEGACIÓN DE NIVELES
+function siguienteNivel(nivel) {
+  document.querySelectorAll('.nivel').forEach(n => n.classList.remove('activo'));
+  document.getElementById('nivel-' + nivel).classList.add('activo');
+  document.getElementById('nivel-actual').textContent = nivel;
+  nivelActual = nivel;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// DRAG AND DROP
+let itemArrastrado = null;
+
+document.addEventListener('dragstart', function(e) {
+  if (e.target.classList.contains('drag-item')) {
+    itemArrastrado = e.target;
+    e.target.style.opacity = '0.5';
+  }
+});
+
+document.addEventListener('dragend', function(e) {
+  if (e.target.classList.contains('drag-item')) {
+    e.target.style.opacity = '1';
+  }
+});
+
+function permitirSoltar(e) {
+  e.preventDefault();
+}
+
+function soltar(e) {
+  e.preventDefault();
+  if (itemArrastrado && e.target.classList.contains('drop-zone')) {
+    e.target.appendChild(itemArrastrado);
+    itemArrastrado = null;
+  }
+}
+
+// NIVEL 1: Verificar Huella Digital
+function verificarNivel1() {
+  const dropZones = document.querySelectorAll('#nivel-1 .drop-zone');
+  let correctas = 0;
+  let total = 0;
+
+  dropZones.forEach(zone => {
+    const tipoEsperado = zone.dataset.acepta;
+    const items = zone.querySelectorAll('.drag-item');
+    items.forEach(item => {
+      total++;
+      if (item.dataset.tipo === tipoEsperado) {
+        correctas++;
+        item.style.background = '#51cf66';
+      } else {
+        item.style.background = '#ff6b6b';
+      }
+    });
+  });
+
+  const feedback = document.getElementById('feedback-nivel1');
+  if (correctas === 6) {
+    feedback.className = 'feedback exito';
+    feedback.innerHTML = '🎉 ¡PERFECTO! Todas correctas. Ganaste 100 puntos ⭐';
+    actualizarPuntos(100);
+    setTimeout(() => siguienteNivel(2), 2000);
+  } else {
+    feedback.className = 'feedback error';
+    feedback.innerHTML = `😅 Tienes ${correctas} de 6 correctas. Las verdes están bien, las rojas muevelas. ¡Intenta de nuevo!`;
+  }
+}
+
+// NIVEL 2: Evaluar Decisión
+function evaluarDecision(btn, tipo, nivel) {
+  const botones = btn.parentElement.querySelectorAll('.decision-btn');
+  botones.forEach(b => b.disabled = true);
+
+  const feedback = document.getElementById('feedback-nivel' + nivel.charAt(nivel.length-1));
+  
+  if (tipo === 'correcta') {
+    btn.style.background = '#51cf66';
+    btn.style.color = 'white';
+    feedback.className = 'feedback exito';
+    feedback.innerHTML = '🦸 ¡EXCELENTE! Eso es ser un Espectador Activo. Apoyaste a la víctima en privado y reportaste. +100 puntos ⭐';
+    actualizarPuntos(100);
+    setTimeout(() => siguienteNivel(3), 2500);
+  } else {
+    btn.style.background = '#ff6b6b';
+    btn.style.color = 'white';
+    feedback.className = 'feedback error';
+    feedback.innerHTML = '😕 Esa acción no ayuda. Recuerda: nunca compartas el contenido ofensivo (revictimización) y siempre apoya a la víctima en privado. ¡Intenta de nuevo!';
+    setTimeout(() => {
+      botones.forEach(b => { b.disabled = false; b.style.background = 'white'; b.style.color = 'black'; });
+      feedback.style.display = 'none';
+    }, 3000);
+  }
+}
+
+// NIVEL 3: Ordenar Pasos
+function seleccionarPaso(elemento) {
+  if (elemento.classList.contains('orden-correcto')) return;
+  
+  const orden = elemento.dataset.orden;
+  const posicion = pasosSeleccionados.length + 1;
+  
+  if (posicion <= 4) {
+    pasosSeleccionados.push(orden);
+    elemento.querySelector('.paso-numero').textContent = posicion;
+    elemento.style.background = '#f0f4ff';
+    
+    if (posicion === 4) {
+      verificarPasos();
+    }
+  }
+}
+
+function verificarPasos() {
+  const correcto = ['1', '2', '3', '4'];
+  const feedback = document.getElementById('feedback-nivel3');
+  
+  if (JSON.stringify(pasosSeleccionados) === JSON.stringify(correcto)) {
+    document.querySelectorAll('#nivel-3 .paso-item').forEach(p => p.classList.add('orden-correcto'));
+    feedback.className = 'feedback exito';
+    feedback.innerHTML = '🎯 ¡ORDEN PERFECTO! Preservar → Aislar → Denunciar → Contener. +100 puntos ⭐';
+    actualizarPuntos(100);
+    setTimeout(() => siguienteNivel(4), 2500);
+  } else {
+    feedback.className = 'feedback error';
+    feedback.innerHTML = '❌ El orden no es correcto. El orden es: 📸 Preservar → 🔒 Aislar → 🚩 Denunciar → 💚 Contener. ¡Reinicia e intenta de nuevo!';
+  }
+}
+
+function reiniciarPasos() {
+  pasosSeleccionados = [];
+  document.querySelectorAll('#nivel-3 .paso-item').forEach(p => {
+    p.querySelector('.paso-numero').textContent = '?';
+    p.style.background = 'white';
+    p.classList.remove('orden-correcto');
+  });
+  document.getElementById('feedback-nivel3').style.display = 'none';
+}
+
+// NIVEL 4: Preguntas de Algoritmos
+function evaluarPreguntaAlg(btn, esCorrecta, num) {
+  const botones = btn.parentElement.querySelectorAll('.opcion');
+  botones.forEach(b => b.disabled = true);
+
+  const feedback = document.getElementById('feedback-nivel4');
+
+  if (esCorrecta) {
+    btn.classList.add('correcta');
+    respuestasAlgCorrectas++;
+  } else {
+    btn.classList.add('incorrecta');
+  }
+
+  setTimeout(() => {
+    document.querySelector(`.pregunta-alg[data-num="${num}"]`).style.display = 'none';
+    const siguiente = document.querySelector(`.pregunta-alg[data-num="${num+1}"]`);
+    
+    if (siguiente) {
+      siguiente.style.display = 'block';
+    } else {
+      if (respuestasAlgCorrectas >= 3) {
+        feedback.className = 'feedback exito';
+        feedback.innerHTML = `🤖 ¡Excelente! Acertaste ${respuestasAlgCorrectas} de 4. Los algoritmos no son mágicos: ¡tú puedes controlarlos! +100 puntos ⭐`;
+        actualizarPuntos(100);
+        setTimeout(() => siguienteNivel(5), 2500);
+      } else {
+        feedback.className = 'feedback error';
+        feedback.innerHTML = `Acertaste ${respuestasAlgCorrectas} de 4. Repasa la explicación y vuelve a intentar. ¡Tú puedes!`;
+      }
+    }
+  }, 1500);
+}
+
+// NIVEL 5: Verificar Hábitos
+function verificarNivel5() {
+  const dropZones = document.querySelectorAll('#nivel-5 .drop-zone');
+  let correctas = 0;
+
+  dropZones.forEach(zone => {
+    const tipoEsperado = zone.dataset.acepta;
+    const items = zone.querySelectorAll('.drag-item');
+    items.forEach(item => {
+      if (item.dataset.tipo === tipoEsperado) {
+        correctas++;
+        item.style.background = '#51cf66';
+      } else {
+        item.style.background = '#ff6b6b';
+      }
+    });
+  });
+
+  const feedback = document.getElementById('feedback-nivel5');
+  if (correctas === 6) {
+    feedback.className = 'feedback exito';
+    feedback.innerHTML = '💚 ¡Perfecto! Sabes cuidar tu salud mental digital. +100 puntos ⭐';
+    actualizarPuntos(100);
+    setTimeout(() => siguienteNivel(6), 2000);
+  } else {
+    feedback.className = 'feedback error';
+    feedback.innerHTML = `Tienes ${correctas} de 6 correctas. ¡Revisa las que están en rojo!`;
+  }
+}
+
+// NIVEL 6: Reto Final
+function toggleAccion(btn) {
+  if (btn.classList.contains('seleccionada')) {
+    btn.classList.remove('seleccionada');
+    btn.style.background = 'white';
+    btn.style.color = 'black';
+    accionesSeleccionadas = accionesSeleccionadas.filter(a => a !== btn);
+  } else {
+    btn.classList.add('seleccionada');
+    btn.style.background = '#667eea';
+    btn.style.color = 'white';
+    accionesSeleccionadas.push(btn);
+  }
+  actualizarPseudocodigo();
+}
+
+function actualizarPseudocodigo() {
+  const contenedor = document.getElementById('acciones-seleccionadas');
+  contenedor.innerHTML = '';
+  accionesSeleccionadas.forEach((accion, idx) => {
+    const linea = document.createElement('div');
+    linea.className = 'pseudocodigo-linea';
+    linea.textContent = `  ${idx+1}. ${accion.textContent}`;
+    contenedor.appendChild(linea);
+  });
+}
+
+function verificarRetoFinal() {
+  const correctas = accionesSeleccionadas.filter(a => a.dataset.correcta === 'true');
+  const incorrectas = accionesSeleccionadas.filter(a => a.dataset.correcta === 'false');
+  const feedback = document.getElementById('feedback-nivel6');
+
+  if (correctas.length === 4 && incorrectas.length === 0) {
+    // Verificar orden
+    const ordenCorrecto = correctas.sort((a,b) => a.dataset.orden - b.dataset.orden);
+    const ordenUsuario = [...accionesSeleccionadas];
+    
+    feedback.className = 'feedback exito';
+    feedback.innerHTML = '🏆 ¡ERES UN VERDADERO HÉROE DIGITAL! Tu protocolo de contención es perfecto. +200 puntos ⭐';
+    actualizarPuntos(200);
+    
+    setTimeout(() => {
+      document.querySelectorAll('.nivel').forEach(n => n.classList.remove('activo'));
+      document.getElementById('certificado-final').classList.add('activo');
+      document.getElementById('puntos-finales').textContent = puntos;
+      document.getElementById('barra-progreso').style.display = 'none';
+    }, 3000);
+  } else {
+    feedback.className = 'feedback error';
+    let msg = '❌ Hay acciones incorrectas o faltantes. Recuerda:<br>';
+    msg += '✅ SÍ: Capturar, Bloquear, Reportar, Apoyar en privado<br>';
+    msg += '❌ NO: Responder con enojo, Compartir el contenido, Borrar antes de capturar, Reírte';
+    feedback.innerHTML = msg;
+  }
+}
+</script>
+</body>
+</html>
